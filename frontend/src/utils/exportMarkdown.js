@@ -22,7 +22,7 @@ export function formatCouncilResponseAsMarkdown(message, userQuestion) {
 
     message.stage1.forEach((response, index) => {
       markdown += `### ${response.model}\n\n`;
-      markdown += `${response.content}\n\n`;
+      markdown += `${response.response}\n\n`;
 
       if (response.reasoning_details) {
         markdown += `**Reasoning Details:**\n\n${response.reasoning_details}\n\n`;
@@ -60,7 +60,7 @@ export function formatCouncilResponseAsMarkdown(message, userQuestion) {
       markdown += `#### Evaluation by ${ranking.model}\n\n`;
 
       // Add de-anonymized content if we have the mapping
-      let evaluationText = ranking.content;
+      let evaluationText = ranking.ranking;
       if (message.metadata?.label_to_model) {
         // Replace Response labels with actual model names in bold
         Object.entries(message.metadata.label_to_model).forEach(([label, modelName]) => {
@@ -74,8 +74,13 @@ export function formatCouncilResponseAsMarkdown(message, userQuestion) {
       if (ranking.parsed_ranking && ranking.parsed_ranking.length > 0) {
         markdown += '**Extracted Ranking:**\n\n';
         ranking.parsed_ranking.forEach((label, idx) => {
-          const modelName = message.metadata?.label_to_model?.[label] || label;
-          markdown += `${idx + 1}. ${modelName} (${label})\n`;
+          // Only show model name if we have the mapping, otherwise just show the label
+          if (message.metadata?.label_to_model?.[label]) {
+            const modelName = message.metadata.label_to_model[label];
+            markdown += `${idx + 1}. ${modelName} (${label})\n`;
+          } else {
+            markdown += `${idx + 1}. ${label}\n`;
+          }
         });
         markdown += '\n';
       }
@@ -87,7 +92,7 @@ export function formatCouncilResponseAsMarkdown(message, userQuestion) {
   // Stage 3: Final Synthesis
   if (message.stage3) {
     markdown += '## Stage 3: Final Synthesis\n\n';
-    markdown += `${message.stage3.content}\n\n`;
+    markdown += `${message.stage3.response}\n\n`;
 
     if (message.stage3.reasoning_details) {
       markdown += `**Reasoning Details:**\n\n${message.stage3.reasoning_details}\n\n`;
