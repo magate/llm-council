@@ -24,3 +24,8 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Data directory for conversation storage
 DATA_DIR = "data/conversations"
+
+# Conversation history settings
+HISTORY_RECENCY_WINDOW = 2      # Always include last N exchanges
+HISTORY_MAX_EXCHANGES = 5       # Maximum total exchanges to include
+HISTORY_KEYWORD_THRESHOLD = 0.2 # Minimum keyword similarity (0-1)
