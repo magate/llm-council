@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
-import { formatCouncilResponseAsMarkdown, downloadMarkdown } from '../utils/exportMarkdown';
+import { formatCouncilResponseAsMarkdown, formatConversationAsMarkdown, downloadMarkdown } from '../utils/exportMarkdown';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -47,6 +47,13 @@ export default function ChatInterface({
     const markdown = formatCouncilResponseAsMarkdown(message, userQuestion);
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     const filename = `council-response-${timestamp}.md`;
+    downloadMarkdown(markdown, filename);
+  };
+
+  const handleDownloadTranscript = () => {
+    const markdown = formatConversationAsMarkdown(conversation);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `council-transcript-${timestamp}.md`;
     downloadMarkdown(markdown, filename);
   };
 
@@ -142,6 +149,18 @@ export default function ChatInterface({
         )}
 
         <div ref={messagesEndRef} />
+
+        {conversation.messages.length > 0 && (
+          <div className="transcript-download">
+            <button
+              className="download-transcript-button"
+              onClick={handleDownloadTranscript}
+              title="Download entire conversation as Markdown"
+            >
+              Download Full Transcript
+            </button>
+          </div>
+        )}
       </div>
 
       <form className="input-form" onSubmit={handleSubmit}>

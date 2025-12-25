@@ -107,6 +107,97 @@ export function formatCouncilResponseAsMarkdown(message, userQuestion) {
 }
 
 /**
+ * Formats an entire conversation as markdown
+ * @param {Object} conversation - The conversation object with messages array
+ * @returns {string} - Formatted markdown string
+ */
+export function formatConversationAsMarkdown(conversation) {
+  let markdown = '';
+
+  // Header
+  markdown += '# LLM Council Conversation Transcript\n\n';
+
+  if (conversation.title) {
+    markdown += `**Title:** ${conversation.title}\n\n`;
+  }
+
+  if (conversation.created_at) {
+    const date = new Date(conversation.created_at).toLocaleString();
+    markdown += `**Created:** ${date}\n\n`;
+  }
+
+  markdown += '---\n\n';
+
+  // Process all messages
+  if (conversation.messages && conversation.messages.length > 0) {
+    conversation.messages.forEach((msg, index) => {
+      if (msg.role === 'user') {
+        markdown += `## User Question ${Math.floor(index / 2) + 1}\n\n`;
+        markdown += `${msg.content}\n\n`;
+        markdown += '---\n\n';
+      } else if (msg.role === 'assistant') {
+        markdown += `## Council Response ${Math.floor(index / 2) + 1}\n\n`;
+
+        // Stage 1
+        if (msg.stage1 && msg.stage1.length > 0) {
+          markdown += '### Stage 1: Individual Model Responses\n\n';
+          msg.stage1.forEach((response) => {
+            markdown += `**${response.model}:**\n\n`;
+            markdown += `${response.response}\n\n`;
+          });
+          markdown += '\n';
+        }
+
+        // Stage 2
+        if (msg.stage2 && msg.stage2.length > 0) {
+          markdown += '### Stage 2: Peer Evaluations\n\n';
+
+          // Aggregate rankings if available
+          if (msg.metadata?.aggregate_rankings && msg.metadata.aggregate_rankings.length > 0) {
+            markdown += '**Aggregate Rankings:**\n\n';
+            msg.metadata.aggregate_rankings.forEach((item, idx) => {
+              const modelName = msg.metadata.label_to_model?.[item.label] || item.label;
+              const avgPos = item.average_position != null ? item.average_position.toFixed(2) : 'N/A';
+              const votes = item.vote_count != null ? item.vote_count : 0;
+              markdown += `${idx + 1}. ${modelName} - Avg position: ${avgPos} (${votes} votes)\n`;
+            });
+            markdown += '\n';
+          }
+
+          msg.stage2.forEach((ranking) => {
+            markdown += `**${ranking.model} Evaluation:**\n\n`;
+
+            // De-anonymize if we have the mapping
+            let evaluationText = ranking.ranking;
+            if (msg.metadata?.label_to_model) {
+              Object.entries(msg.metadata.label_to_model).forEach(([label, modelName]) => {
+                const regex = new RegExp(`\\b${label}\\b`, 'g');
+                evaluationText = evaluationText.replace(regex, `**${modelName}**`);
+              });
+            }
+
+            markdown += `${evaluationText}\n\n`;
+          });
+        }
+
+        // Stage 3
+        if (msg.stage3) {
+          markdown += '### Stage 3: Final Synthesis\n\n';
+          markdown += `${msg.stage3.response}\n\n`;
+        }
+
+        markdown += '---\n\n';
+      }
+    });
+  }
+
+  // Footer
+  markdown += `*Transcript generated on ${new Date().toLocaleString()}*\n`;
+
+  return markdown;
+}
+
+/**
  * Triggers a download of the markdown content as a file
  * @param {string} markdown - The markdown content to download
  * @param {string} filename - The filename for the download (optional)
