@@ -89,7 +89,7 @@ export default function ChatInterface({
                       <button
                         className="download-button"
                         onClick={() => handleDownloadResponse(msg, index)}
-                        title="Download as Markdown"
+                        title="Download complete response as Markdown"
                       >
                         Download MD
                       </button>
