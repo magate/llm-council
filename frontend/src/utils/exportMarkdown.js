@@ -46,7 +46,9 @@ export function formatCouncilResponseAsMarkdown(message, userQuestion) {
 
       message.metadata.aggregate_rankings.forEach((item, index) => {
         const modelName = message.metadata.label_to_model?.[item.label] || item.label;
-        markdown += `${index + 1}. **${modelName}** (${item.label}) - Average position: ${item.average_position.toFixed(2)} (${item.vote_count} votes)\n`;
+        const avgPos = item.average_position != null ? item.average_position.toFixed(2) : 'N/A';
+        const votes = item.vote_count != null ? item.vote_count : 0;
+        markdown += `${index + 1}. **${modelName}** (${item.label}) - Average position: ${avgPos} (${votes} votes)\n`;
       });
 
       markdown += '\n';
