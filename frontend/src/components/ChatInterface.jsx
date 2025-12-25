@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
+import { formatCouncilResponseAsMarkdown, downloadMarkdown } from '../utils/exportMarkdown';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -35,6 +36,18 @@ export default function ChatInterface({
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+
+  const handleDownloadResponse = (message, index) => {
+    // Find the user question that preceded this response
+    const userQuestion = index > 0 && conversation.messages[index - 1].role === 'user'
+      ? conversation.messages[index - 1].content
+      : null;
+
+    const markdown = formatCouncilResponseAsMarkdown(message, userQuestion);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `council-response-${timestamp}.md`;
+    downloadMarkdown(markdown, filename);
   };
 
   if (!conversation) {
@@ -70,7 +83,18 @@ export default function ChatInterface({
                 </div>
               ) : (
                 <div className="assistant-message">
-                  <div className="message-label">LLM Council</div>
+                  <div className="message-header">
+                    <div className="message-label">LLM Council</div>
+                    {msg.stage3 && (
+                      <button
+                        className="download-button"
+                        onClick={() => handleDownloadResponse(msg, index)}
+                        title="Download as Markdown"
+                      >
+                        Download MD
+                      </button>
+                    )}
+                  </div>
 
                   {/* Stage 1 */}
                   {msg.loading?.stage1 && (
